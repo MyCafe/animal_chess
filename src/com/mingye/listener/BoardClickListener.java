@@ -17,9 +17,13 @@ public class BoardClickListener extends MouseAdapter {
         this.boardPanel = boardPanel;
     }
 
+    /**
+     * 鼠标按键释放时触发，处理玩家的一次落子操作。
+     */
     @Override
     public void mouseReleased(MouseEvent e) {
         GameService service = boardPanel.getService();
+        // 对局已经结束，忽略后续的所有点击
         if (service.isGameOverFlag()) {
             return;
         }
@@ -36,12 +40,15 @@ public class BoardClickListener extends MouseAdapter {
             return;
         }
 
+        // 像素坐标换算为棋盘格；坐标未精确落在任一格内时返回 null
         Grid[][] boardArr = boardPanel.getService().getBoardArr();
         Grid currentGrid = BoardArrayUtils.getGridByLocation(boardArr, x, y);
 
+        // 走子逻辑统一由 GameService 判定；返回 true 表示本次是有效操作，需要换手
         boolean changePlayerFlag = service.doPlay(currentGrid);
         boardPanel.repaint();
 
+        // 已分出胜负则直接结算；未分胜负且本次操作有效时，才切换到对方行动
         String winPlayerColor = service.checkWin();
         if (winPlayerColor != null) {
             boardPanel.showWinDialog(winPlayerColor);
