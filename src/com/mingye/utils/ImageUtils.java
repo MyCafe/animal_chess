@@ -7,6 +7,8 @@ import com.mingye.service.GameService;
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -18,6 +20,12 @@ public class ImageUtils {
      * 图片文件的基本路径
      */
     private static final String BASE_FILE_PATH;
+
+    /**
+     * 图片缓存：key 为图片文件名。
+     * 重绘时直接从内存取，避免每次绘制都读磁盘。
+     */
+    private static final Map<String, BufferedImage> IMAGE_CACHE = new HashMap<>();
 
     static {
         imagePathMap = new LinkedHashMap<>();
@@ -47,52 +55,53 @@ public class ImageUtils {
     }
 
     public static BufferedImage loadRiverImage() {
-        try {
-            String imagePath = "river.png";
-            BufferedImage image = ImageIO.read(new File(BASE_FILE_PATH + imagePath));
-            return image;
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
-        }
+        return loadCachedImage("river.png");
     }
 
     public static BufferedImage loadTrapImage() {
-        try {
-            String imagePath = "trap.png";
-            BufferedImage image = ImageIO.read(new File(BASE_FILE_PATH + imagePath));
-            return image;
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
-        }
+        return loadCachedImage("trap.png");
     }
 
     public static BufferedImage loadCaveImage() {
-        try {
-            String imagePath = "cave.png";
-            BufferedImage image = ImageIO.read(new File(BASE_FILE_PATH + imagePath));
-            return image;
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
-        }
+        return loadCachedImage("cave.png");
     }
 
     /**
      * 加载棋子的图片
      *
-     * @param piece
-     * @return
+     * @param piece 棋子
+     * @return 对应图片，未配置时返回 null
      */
     public static BufferedImage loadPieceImageByValue(Piece piece) {
         String mapKey = piece.getColor() + piece.getPieceName();
-        try {
-            if (imagePathMap.containsKey(mapKey)) {
-                String imagePath = imagePathMap.get(mapKey);
-                BufferedImage image = ImageIO.read(new File(BASE_FILE_PATH + imagePath));
-                return image;
-            }
+        String imagePath = imagePathMap.get(mapKey);
+        if (imagePath == null) {
             return null;
-        } catch (Exception e) {
-            throw new RuntimeException(e.getMessage());
+        }
+        return loadCachedImage(imagePath);
+    }
+
+    /**
+     * 加载图片并缓存。
+     * 同一张图片只会从磁盘读取一次，后续重绘直接复用内存中的 BufferedImage。
+     *
+     * @param imagePath 图片文件名（不含目录）
+     * @return 图片对象
+     */
+    private static BufferedImage loadCachedImage(String imagePath) {
+        BufferedImage cached = IMAGE_CACHE.get(imagePath);
+        if (cached != null) {
+            return cached;
+        }
+        try {
+            BufferedImage image = ImageIO.read(new File(BASE_FILE_PATH + imagePath));
+            if (image == null) {
+                throw new RuntimeException("图片无法解析: " + BASE_FILE_PATH + imagePath);
+            }
+            IMAGE_CACHE.put(imagePath, image);
+            return image;
+        } catch (IOException e) {
+            throw new RuntimeException("加载图片失败: " + BASE_FILE_PATH + imagePath, e);
         }
     }
 

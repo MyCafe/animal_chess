@@ -309,7 +309,6 @@ public class GameService {
      * false 表示当前玩家没结束，继续操作
      */
     public boolean doPlay(Grid targetGrid) {
-        System.out.println("当前玩家：" + (RED_PIECE.equals(currentPlayerColor) ? "红棋" : "黑棋"));
         // 原地无效点击的判断
         if (gridOfSelectedPiece != null && gridOfSelectedPiece == targetGrid) {
             return false;
