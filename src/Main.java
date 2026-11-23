@@ -5,9 +5,15 @@ import javax.swing.*;
 
 
 /**
- * 主类
+ * 程序启动类
  */
 public class Main {
+
+    /**
+     * Main方法
+     *
+     * @param args
+     */
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             try {
